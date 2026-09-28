@@ -7,6 +7,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Checking out source code from GitHub...'
+
                 checkout scm
             }
         }
@@ -14,6 +15,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 echo 'Running application tests...'
+
                 bat 'python -m pytest'
             }
         }
@@ -21,6 +23,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image...'
+
                 bat '"C:\\Users\\acer\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" build -t devops-flask-app:latest .'
             }
         }
@@ -37,47 +40,41 @@ pipeline {
                     )
                 ]) {
 
-                    bat 'docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%'
+                    bat 'echo %DOCKER_PASSWORD% | "C:\\Users\\acer\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" login -u %DOCKER_USERNAME% --password-stdin'
                 }
             }
         }
 
         stage('Push Docker Image') {
             steps {
+                echo 'Pushing Docker image to Docker Hub...'
 
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-credentials',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )
-                ]) {
+                bat '"C:\\Users\\acer\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" tag devops-flask-app:latest siddharthpingle7030/devops-flask-app:latest'
 
-                    bat 'docker tag devops-flask-app:latest %DOCKER_USERNAME%/devops-flask-app:latest'
-
-                    bat 'docker push %DOCKER_USERNAME%/devops-flask-app:latest'
-                }
+                bat '"C:\\Users\\acer\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" push siddharthpingle7030/devops-flask-app:latest'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deployment stage completed.'
+                echo 'Deploying Docker container...'
+
+                bat '"C:\\Users\\acer\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" stop devops-flask-app || exit 0'
+
+                bat '"C:\\Users\\acer\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" rm devops-flask-app || exit 0'
+
+                bat '"C:\\Users\\acer\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" run -d -p 5000:5000 --name devops-flask-app devops-flask-app:latest'
             }
         }
     }
 
     post {
         success {
-            echo '========================================='
-            echo 'CI/CD PIPELINE SUCCESSFUL'
-            echo '========================================='
+            echo 'CI/CD Pipeline completed successfully!'
         }
 
         failure {
-            echo '========================================='
-            echo 'CI/CD PIPELINE FAILED'
-            echo '========================================='
+            echo 'CI/CD Pipeline failed!'
         }
     }
 }
