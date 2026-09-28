@@ -21,7 +21,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image...'
-                bat 'docker build -t devops-flask-app:latest .'
+                bat '"C:\\Users\\acer\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" build -t devops-flask-app:latest .'
             }
         }
 
